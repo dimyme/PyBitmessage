@@ -209,9 +209,10 @@ class addressGenerator(StoppableThread):
                     queues.workerQueue.put((
                         'sendOutOrStoreMyV4Pubkey', address))
 
-            elif command == 'createDeterministicAddresses' \
-                    or command == 'getDeterministicAddress' \
-                    or command == 'createChan' or command == 'joinChan':
+            elif command in (
+                'createDeterministicAddresses',
+                'getDeterministicAddress', 'createChan', 'joinChan'
+            ):
                 if len(deterministicPassphrase) == 0:
                     self.logger.warning(
                         'You are creating deterministic'
@@ -221,9 +222,8 @@ class addressGenerator(StoppableThread):
                     queues.UISignalQueue.put((
                         'updateStatusBar',
                         tr._translate(
-                            "MainWindow",
-                            "Generating %1 new addresses."
-                        ).arg(str(numberOfAddressesToMake))
+                            "MainWindow", "Generating {0} new addresses."
+                        ).format(str(numberOfAddressesToMake))
                     ))
                 signingKeyNonce = 0
                 encryptionKeyNonce = 1
@@ -327,9 +327,9 @@ class addressGenerator(StoppableThread):
                                 'updateStatusBar',
                                 tr._translate(
                                     "MainWindow",
-                                    "%1 is already in 'Your Identities'."
+                                    "{0} is already in 'Your Identities'."
                                     " Not adding it again."
-                                ).arg(address)
+                                ).format(address)
                             ))
                         else:
                             self.logger.debug('label: %s', label)

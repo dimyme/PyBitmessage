@@ -1,7 +1,7 @@
 import os
 import sys
 
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtGui, QtWidgets
 
 import debug
 import defaults
@@ -20,7 +20,7 @@ from network.asyncore_pollchoose import set_rates
 from tr import _translate
 
 
-class SettingsDialog(QtGui.QDialog):
+class SettingsDialog(QtWidgets.QDialog):
     """The "Settings" dialog"""
     def __init__(self, parent=None, firstrun=False):
         super(SettingsDialog, self).__init__(parent)
@@ -42,7 +42,7 @@ class SettingsDialog(QtGui.QDialog):
             self.tabWidgetSettings.setCurrentIndex(
                 self.tabWidgetSettings.indexOf(self.tabNetworkSettings)
             )
-        QtGui.QWidget.resize(self, QtGui.QWidget.sizeHint(self))
+        QtWidgets.QWidget.resize(self, QtWidgets.QWidget.sizeHint(self))
 
     def adjust_from_config(self, config):
         """Adjust all widgets state according to config settings"""
@@ -351,7 +351,7 @@ class SettingsDialog(QtGui.QDialog):
             self.config.set('bitmessagesettings', 'maxuploadrate', str(
                 int(float(self.lineEditMaxUploadRate.text()))))
         except ValueError:
-            QtGui.QMessageBox.about(
+            QtWidgets.QMessageBox.about(
                 self, _translate("MainWindow", "Number needed"),
                 _translate(
                     "MainWindow",
@@ -474,7 +474,7 @@ class SettingsDialog(QtGui.QDialog):
             if shared.maximumLengthOfTimeToBotherResendingMessages < 432000:
                 # If the time period is less than 5 hours, we give
                 # zero values to all fields. No message will be sent again.
-                QtGui.QMessageBox.about(
+                QtWidgets.QMessageBox.about(
                     self,
                     _translate("MainWindow", "Will not resend ever"),
                     _translate(
