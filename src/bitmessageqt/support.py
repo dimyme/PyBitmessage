@@ -1,6 +1,7 @@
 import ctypes
 import ssl
 import sys
+import os
 import time
 
 from qtpy import QtCore
@@ -24,8 +25,8 @@ from version import softwareVersion
 # this is BM support address going to Peter Surda
 OLD_SUPPORT_ADDRESS = 'BM-2cTkCtMYkrSPwFTpgcBrMrf5d8oZwvMZWK'
 SUPPORT_ADDRESS = 'BM-2cUdgkDDAahwPAU6oD2A7DnjqZz3hgY832'
-SUPPORT_LABEL = 'PyBitmessage support'
-SUPPORT_MY_LABEL = 'My new address'
+SUPPORT_LABEL = _translate("Support", "PyBitmessage support")
+SUPPORT_MY_LABEL = _translate("Support", "My new address")
 SUPPORT_SUBJECT = 'Support request'
 SUPPORT_MESSAGE = '''You can use this message to send a report to one of the PyBitmessage core developers regarding PyBitmessage or the mailchuck.com email service. If you are using PyBitmessage involuntarily, for example because your computer was infected with ransomware, this is not an appropriate venue for resolving such issues.
 
@@ -44,6 +45,7 @@ Operating system: {}
 Architecture: {}bit
 Python Version: {}
 OpenSSL Version: {}
+Qt API: {}
 Frozen: {}
 Portable mode: {}
 C PoW: {}
@@ -63,7 +65,7 @@ def checkAddressBook(myapp):
     if queryreturn == []:
         sqlExecute(
             '''INSERT INTO addressbook VALUES (?,?)''',
-            str(_translate("Support", SUPPORT_LABEL)), SUPPORT_ADDRESS
+            SUPPORT_LABEL, SUPPORT_ADDRESS
         )
         myapp.rerenderAddressBook()
 
@@ -81,7 +83,7 @@ def createAddressIfNeeded(myapp):
     if not checkHasNormalAddress():
         queues.addressGeneratorQueue.put((
             'createRandomAddress', 4, 1,
-            str(_translate("Support", SUPPORT_MY_LABEL)), 1, "", False,
+            SUPPORT_MY_LABEL, 1, "", False,
             defaults.networkDefaultProofOfWorkNonceTrialsPerByte,
             defaults.networkDefaultPayloadLengthExtraBytes
         ))
@@ -97,8 +99,7 @@ def createSupportMessage(myapp):
     if state.shutdown:
         return
 
-    myapp.ui.lineEditSubject.setText(
-        str(_translate("Support", SUPPORT_SUBJECT)))
+    myapp.ui.lineEditSubject.setText(SUPPORT_SUBJECT)
     addrIndex = myapp.ui.comboBoxSendFrom.findData(
         address, QtCore.Qt.UserRole,
         QtCore.Qt.MatchFixedString | QtCore.Qt.MatchCaseSensitive
@@ -114,18 +115,19 @@ def createSupportMessage(myapp):
         version += " GIT " + commit
 
     if sys.platform == "win32":
-        os = "Windows %s.%s" % sys.getwindowsversion()
+        osname = "Windows %s.%s" % sys.getwindowsversion()
     else:
         try:
-            from os import uname
-            unixversion = uname()
-            os = unixversion[0] + " " + unixversion[2]
+            unixversion = os.uname()
+            osname = unixversion[0] + " " + unixversion[2]
         except:
             pass
     architecture = "32" if ctypes.sizeof(ctypes.c_voidp) == 4 else "64"
     pythonversion = sys.version
 
     opensslversion = "%s (Python internal), %s (external for PyElliptic)" % (ssl.OPENSSL_VERSION, OpenSSL._version)
+
+    qtapi = os.environ['QT_API']
 
     frozen = "N/A"
     if paths.frozen:
@@ -142,10 +144,10 @@ def createSupportMessage(myapp):
     connectedhosts = len(network.stats.connectedHostsList())
 
     myapp.ui.textEditMessage.setText(
-        str(_translate("Support", SUPPORT_MESSAGE)).format(
-            version, os, architecture, pythonversion, opensslversion,
-            frozen, portablemode, cpow, openclpow, locale, socks, upnp,
-            connectedhosts
+        SUPPORT_MESSAGE.format(
+            version, osname, architecture, pythonversion, opensslversion,
+            qtapi, frozen, portablemode, cpow, openclpow, locale, socks,
+            upnp, connectedhosts
         ))
 
     # single msg tab
