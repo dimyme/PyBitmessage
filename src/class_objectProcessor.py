@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import random
-import shared
 import threading
 import time
 from binascii import hexlify
@@ -9,6 +8,7 @@ from subprocess import call  # nosec
 
 import highlevelcrypto
 import knownnodes
+import shared
 from addresses import (
     calculateInventoryHash, decodeAddress, decodeVarint, encodeAddress,
     encodeVarint, varintDecodeError
@@ -138,12 +138,11 @@ class objectProcessor(threading.Thread):
                 ' WHERE ackdata=?',
                 'ackreceived', int(time.time()), data[readPosition:])
             queues.UISignalQueue.put((
-                'updateSentItemStatusByAckdata',
-                (data[readPosition:],
-                 tr._translate(
-                     "MainWindow",
-                     "Acknowledgement of the message received %1"
-                 ).arg(l10n.formatTimestamp()))
+                'updateSentItemStatusByAckdata', (
+                    data[readPosition:], tr._translate(
+                        "MainWindow",
+                        "Acknowledgement of the message received {0}"
+                    ).format(l10n.formatTimestamp()))
             ))
         else:
             logger.debug('This object is not an acknowledgement bound for me.')

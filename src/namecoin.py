@@ -31,11 +31,11 @@ import os
 import socket
 import sys
 
-from addresses import decodeAddress
-from debug import logger
 import defaults
-import tr  # translate
+from addresses import decodeAddress
 from bmconfigparser import BMConfigParser
+from debug import logger
+from tr import _translate
 
 
 configSection = "bitmessagesettings"
@@ -43,7 +43,6 @@ configSection = "bitmessagesettings"
 
 class RPCError(Exception):
     """Error thrown when the RPC call returns an error."""
-
     error = None
 
     def __init__(self, data):
@@ -68,8 +67,8 @@ class namecoinConnection(object):
 
     def __init__(self, options=None):
         """
-        Initialise.  If options are given, take the connection settings from
-        them instead of loading from the configs.  This can be used to test
+        Initialise. If options are given, take the connection settings from
+        them instead of loading from the configs. This can be used to test
         currently entered connection settings in the config dialog without
         actually changing the values (yet).
         """
@@ -94,7 +93,7 @@ class namecoinConnection(object):
     def query(self, string):
         """
         Query for the bitmessage address corresponding to the given identity
-        string.  If it doesn't contain a slash, id/ is prepended.  We return
+        string. If it doesn't contain a slash, id/ is prepended. We return
         the result as (Error, Address) pair, where the Error is an error
         message to display or None in case of success.
         """
@@ -113,9 +112,9 @@ class namecoinConnection(object):
                 res = self.callRPC("data", ["getValue", string])
                 res = res["reply"]
                 if not res:
-                    return (tr._translate(
-                        "MainWindow", 'The name %1 was not found.'
-                    ).arg(unicode(string)), None)
+                    return (_translate(
+                        "MainWindow", "The name {0} was not found."
+                    ).format(string), None)
             else:
                 assert False
         except RPCError as exc:
@@ -124,17 +123,17 @@ class namecoinConnection(object):
                 errmsg = exc.error["message"]
             else:
                 errmsg = exc.error
-            return (tr._translate(
-                "MainWindow", 'The namecoin query failed (%1)'
-            ).arg(unicode(errmsg)), None)
+            return (_translate(
+                "MainWindow", "The namecoin query failed ({0})"
+            ).format(errmsg), None)
         except AssertionError:
-            return (tr._translate(
-                "MainWindow", 'Unknown namecoin interface type: %1'
-            ).arg(unicode(self.nmctype)), None)
+            return (_translate(
+                "MainWindow", "Unknown namecoin interface type: {0}"
+            ).format(self.nmctype), None)
         except Exception:
             logger.exception("Namecoin query exception")
-            return (tr._translate(
-                "MainWindow", 'The namecoin query failed.'), None)
+            return (_translate(
+                "MainWindow", "The namecoin query failed."), None)
 
         try:
             res = json.loads(res)
@@ -151,14 +150,16 @@ class namecoinConnection(object):
         return (
             None, "%s <%s>" % (display_name, res)
         ) if valid else (
-            tr._translate(
+            _translate(
                 "MainWindow",
-                'The name %1 has no associated Bitmessage address.'
-            ).arg(unicode(string)), None)
+                "The name {0} has no associated Bitmessage address."
+            ).format(string),
+            None
+        )
 
     def test(self):
         """
-        Test the connection settings.  This routine tries to query a "getinfo"
+        Test the connection settings. This routine tries to query a "getinfo"
         command, and builds either an error message or a success message with
         some info from it.
         """
@@ -178,33 +179,36 @@ class namecoinConnection(object):
                     versStr = "0.%d.%d" % (v1, v2)
                 else:
                     versStr = "0.%d.%d.%d" % (v1, v2, v3)
-                message = (
-                    'success',
-                    tr._translate(
+                return (
+                    'success', _translate(
                         "MainWindow",
-                        'Success!  Namecoind version %1 running.').arg(
-                            unicode(versStr)))
+                        "Success! Namecoind version {0} running."
+                    ).format(versStr)
+                )
 
             elif self.nmctype == "nmcontrol":
                 res = self.callRPC("data", ["status"])
                 prefix = "Plugin data running"
                 if ("reply" in res) and res["reply"][:len(prefix)] == prefix:
-                    return ('success', tr._translate("MainWindow", 'Success!  NMControll is up and running.'))
+                    return (
+                        'success', _translate(
+                            "MainWindow",
+                            "Success! NMControll is up and running.")
+                    )
 
                 logger.error("Unexpected nmcontrol reply: %s", res)
-                message = ('failed', tr._translate("MainWindow", 'Couldn\'t understand NMControl.'))
+                return (
+                    'failed', _translate(
+                        "MainWindow", "Couldn\'t understand NMControl.")
+                )
 
             else:
-                print "Unsupported Namecoin type"
-                sys.exit(1)
-
-            return message
+                sys.exit("Unsupported Namecoin type")
 
         except Exception:
             logger.info("Namecoin connection test failure")
             return (
-                'failed',
-                tr._translate(
+                'failed', _translate(
                     "MainWindow", "The connection to namecoin failed.")
             )
 
@@ -264,7 +268,9 @@ class namecoinConnection(object):
         return result
 
     def queryServer(self, data):
-        """Helper routine sending data to the RPC server and returning the result."""
+        """
+        Helper routine sending data to the RPC server and returning the result.
+        """
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
