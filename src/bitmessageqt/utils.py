@@ -83,7 +83,6 @@ def avatarize(address):
     """
     idcon = QtGui.QIcon()
     icon_hash = hashlib.md5(addBMIfNotPresent(address)).hexdigest()
-    str_broadcast_subscribers = '[Broadcast subscribers]'
     if address == str_broadcast_subscribers:
         # don't hash [Broadcast subscribers]
         icon_hash = address

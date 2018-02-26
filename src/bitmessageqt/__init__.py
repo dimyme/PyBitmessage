@@ -545,7 +545,7 @@ class MyForm(settingsmixin.SMainWindow):
                 try:
                     subwidget.setUnreadCount(
                         db[toAddress][subwidget.folderName])
-                    if subwidget.folderName not in ["new", "trash", "sent"]:
+                    if subwidget.folderName not in ("new", "trash", "sent"):
                         unread += db[toAddress][subwidget.folderName]
                     db[toAddress].pop(subwidget.folderName, None)
                 except:
@@ -561,7 +561,7 @@ class MyForm(settingsmixin.SMainWindow):
                     if toAddress is not None and tab == 'messages' and folder == "new":
                         continue
                     subwidget = Ui_FolderWidget(widget, j, toAddress, f, c)
-                    if subwidget.folderName not in ["new", "trash", "sent"]:
+                    if subwidget.folderName not in ("new", "trash", "sent"):
                         unread += c
                     j += 1
             widget.setUnreadCount(unread)
@@ -577,7 +577,7 @@ class MyForm(settingsmixin.SMainWindow):
                 if toAddress is not None and tab == 'messages' and folder == "new":
                     continue
                 subwidget = Ui_FolderWidget(widget, j, toAddress, folder, db[toAddress][folder])
-                if subwidget.folderName not in ["new", "trash", "sent"]:
+                if subwidget.folderName not in ("new", "trash", "sent"):
                     unread += db[toAddress][folder]
                 j += 1
             widget.setUnreadCount(unread)
@@ -1990,10 +1990,10 @@ class MyForm(settingsmixin.SMainWindow):
         for address in sorted(
             oldRows, key=lambda x: oldRows[x][2], reverse=True
         ):
-            if address in newRows:
+            try:
                 completerList.append(
                     newRows.pop(address)[0] + " <" + address + ">")
-            else:
+            except KeyError:
                 self.ui.tableWidgetAddressBook.removeRow(oldRows[address][2])
         for address in newRows:
             addRow(address, newRows[address][0], newRows[address][1])
@@ -2067,13 +2067,12 @@ class MyForm(settingsmixin.SMainWindow):
 
         # To send a message to specific people (rather than broadcast)
         if sendMessageToPeople:
-            toAddressesList = [
+            toAddressesList = set([
                 s.strip() for s in toAddresses.replace(',', ';').split(';')
-            ]
+            ])
             # remove duplicate addresses. If the user has one address
             # with a BM- and the same address without the BM-, this will
             # not catch it. They'll send the message to the person twice.
-            toAddressesList = list(set(toAddressesList))
             for toAddress in toAddressesList:
                 if toAddress != '':
                     # label plus address
@@ -2317,7 +2316,7 @@ class MyForm(settingsmixin.SMainWindow):
                     '''INSERT INTO sent VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', *t)
 
                 toLabel = str_broadcast_subscribers
-                
+
                 self.displayNewSentMessage(
                     toAddress, toLabel, fromAddress, subject, message, ackdata)
 
@@ -2418,25 +2417,42 @@ class MyForm(settingsmixin.SMainWindow):
     # receives a message to an address that is acting as a
     # pseudo-mailing-list. The message will be broadcast out. This function
     # puts the message on the 'Sent' tab.
-    def displayNewSentMessage(self, toAddress, toLabel, fromAddress, subject, message, ackdata):
+    def displayNewSentMessage(
+            self, toAddress, toLabel, fromAddress, subject,
+            message, ackdata):
         acct = accountClass(fromAddress)
         acct.parseMessage(toAddress, fromAddress, subject, message)
         tab = -1
-        for sent in [self.ui.tableWidgetInbox, self.ui.tableWidgetInboxSubscriptions, self.ui.tableWidgetInboxChans]:
+        for sent in (
+            self.ui.tableWidgetInbox,
+            self.ui.tableWidgetInboxSubscriptions,
+            self.ui.tableWidgetInboxChans
+        ):
             tab += 1
             if tab == 1:
                 tab = 2
             treeWidget = self.widgetConvert(sent)
             if self.getCurrentFolder(treeWidget) != "sent":
                 continue
-            if treeWidget == self.ui.treeWidgetYourIdentities and self.getCurrentAccount(treeWidget) not in (fromAddress, None, False):
+            if treeWidget == self.ui.treeWidgetYourIdentities \
+                and self.getCurrentAccount(treeWidget) not in (
+                    fromAddress, None, False):
                 continue
-            elif treeWidget in [self.ui.treeWidgetSubscriptions, self.ui.treeWidgetChans] and self.getCurrentAccount(treeWidget) != toAddress:
+            elif treeWidget in (
+                self.ui.treeWidgetSubscriptions,
+                self.ui.treeWidgetChans
+            ) and self.getCurrentAccount(treeWidget) != toAddress:
                 continue
-            elif not helper_search.check_match(toAddress, fromAddress, subject, message, self.getCurrentSearchOption(tab), self.getCurrentSearchLine(tab)):
+            elif not helper_search.check_match(
+                toAddress, fromAddress, subject, message,
+                self.getCurrentSearchOption(tab),
+                self.getCurrentSearchLine(tab)
+            ):
                 continue
 
-            self.addMessageListItemSent(sent, toAddress, fromAddress, subject, "msgqueued", ackdata, time.time())
+            self.addMessageListItemSent(
+                sent, toAddress, fromAddress, subject, "msgqueued",
+                ackdata, time.time())
             self.getAccountTextedit(acct).setPlainText(message)
             sent.setCurrentCell(0, 0)
 
@@ -2449,11 +2465,11 @@ class MyForm(settingsmixin.SMainWindow):
         inbox = self.getAccountMessagelist(acct)
         ret = None
         tab = -1
-        for treeWidget in [
+        for treeWidget in (
             self.ui.treeWidgetYourIdentities,
             self.ui.treeWidgetSubscriptions,
             self.ui.treeWidgetChans
-        ]:
+        ):
             tab += 1
             if tab == 1:
                 tab = 2
@@ -2468,7 +2484,7 @@ class MyForm(settingsmixin.SMainWindow):
             if tableWidget == inbox \
                 and self.getCurrentAccount(treeWidget) == acct.address \
                 and self.getCurrentFolder(treeWidget) \
-                    in ["inbox", None]:
+                    in ("inbox", None):
                 ret = self.addMessageListItemInbox(
                     inbox, "inbox", inventoryHash, toAddress, fromAddress,
                     subject, time.time(), 0
@@ -2476,7 +2492,7 @@ class MyForm(settingsmixin.SMainWindow):
             elif treeWidget == self.ui.treeWidgetYourIdentities \
                 and self.getCurrentAccount(treeWidget) is None \
                 and self.getCurrentFolder(treeWidget) \
-                    in ["inbox", "new", None]:
+                    in ("inbox", "new", None):
                 ret = self.addMessageListItemInbox(
                     tableWidget, "inbox", inventoryHash, toAddress,
                     fromAddress, subject, time.time(), 0
@@ -2999,8 +3015,11 @@ class MyForm(settingsmixin.SMainWindow):
                 currentInboxRow = messagelist.currentRow()
                 address = messagelist.item(
                     currentInboxRow, 0).address
-        for box in [self.ui.comboBoxSendFrom, self.ui.comboBoxSendFromBroadcast]:
-            listOfAddressesInComboBoxSendFrom = [str(box.itemData(i)) for i in range(box.count())]
+        for box in (
+            self.ui.comboBoxSendFrom, self.ui.comboBoxSendFromBroadcast
+        ):
+            listOfAddressesInComboBoxSendFrom = [
+                str(box.itemData(i)) for i in range(box.count())]
             if address in listOfAddressesInComboBoxSendFrom:
                 currentIndex = listOfAddressesInComboBoxSendFrom.index(address)
                 box.setCurrentIndex(currentIndex)
@@ -3123,7 +3142,7 @@ class MyForm(settingsmixin.SMainWindow):
         quotedText = self.quoted_text(
             unicode(messageAtCurrentInboxRow, 'utf-8', 'replace'))
         widget['message'].setPlainText(quotedText)
-        if acct.subject[0:3] in ['Re:', 'RE:']:
+        if acct.subject[0:3] in ('Re:', 'RE:'):
             widget['subject'].setText(
                 tableWidget.item(currentInboxRow, 2).label)
         else:
@@ -3751,10 +3770,8 @@ class MyForm(settingsmixin.SMainWindow):
         currentRow = tableWidget.currentRow()
         currentFolder = self.getCurrentFolder()
         if currentColumn not in (0, 1, 2):  # to, from, subject
-            if currentFolder == "sent":
-                currentColumn = 0
-            else:
-                currentColumn = 1
+            currentColumn = 0 if currentFolder == "sent" else 1
+
         if currentFolder == "sent":
             myAddress = tableWidget.item(currentRow, 1).data(QtCore.Qt.UserRole)
             otherAddress = tableWidget.item(currentRow, 0).data(QtCore.Qt.UserRole)
@@ -3769,7 +3786,7 @@ class MyForm(settingsmixin.SMainWindow):
             text = tableWidget.item(currentRow, currentColumn).label
         else:
             text = tableWidget.item(currentRow, currentColumn).data(QtCore.Qt.UserRole)
-        # text = unicode(str(text), 'utf-8', 'ignore')
+
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.setText(text)
 

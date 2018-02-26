@@ -33,14 +33,13 @@ class LanguageBox(QtWidgets.QComboBox):
         ):
             localeShort = \
                 os.path.split(translationFile)[1].split("_", 1)[1][:-3]
-            locale = QtCore.QLocale(localeShort)
             if localeShort in LanguageBox.languageName:
                 self.addItem(
                     LanguageBox.languageName[localeShort], localeShort)
-            elif locale.nativeLanguageName() == "":
-                self.addItem(localeShort, localeShort)
             else:
-                self.addItem(locale.nativeLanguageName(), localeShort)
+                locale = QtCore.QLocale(localeShort)
+                self.addItem(
+                    locale.nativeLanguageName() or localeShort, localeShort)
 
         configuredLocale = BMConfigParser().safeGet(
             'bitmessagesettings', 'userlocale', 'system')
