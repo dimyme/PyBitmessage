@@ -94,7 +94,7 @@ class AddressDataDialog(QtWidgets.QDialog, AddressCheckMixin):
     def __init__(self, parent):
         super(AddressDataDialog, self).__init__(parent)
         self.parent = parent
-        self.data = ("", "")
+        self.data = None
 
     def accept(self):
         """Callback for QDialog accepting value"""
@@ -190,6 +190,7 @@ class NewSubscriptionDialog(AddressDataDialog, RetranslateMixin):
     def __init__(self, parent=None):
         super(NewSubscriptionDialog, self).__init__(parent)
         widgets.load('newsubscriptiondialog.ui', self)
+        self.recent = []
         self._setup()
 
     def _onSuccess(self, addressVersion, streamNumber, ripe):
@@ -313,6 +314,7 @@ class EmailGatewayDialog(QtWidgets.QDialog, RetranslateMixin):
         widgets.load('emailgateway.ui', self)
         self.parent = parent
         self.config = config
+        self.data = None
         if account:
             self.acct = account
             self.setWindowTitle(_translate(
