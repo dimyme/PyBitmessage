@@ -57,6 +57,8 @@ try:
 except ImportError:
     get_plugins = False
 
+TimestampRole = 33
+
 
 # TODO: rewrite
 def powQueueSize():
@@ -1135,7 +1137,7 @@ class MyForm(settingsmixin.SMainWindow):
         newItem = myTableWidgetItem(statusText)
         newItem.setToolTip(statusText)
         newItem.setData(QtCore.Qt.UserRole, ackdata)
-        newItem.setData(33, int(lastactiontime))
+        newItem.setData(TimestampRole, int(lastactiontime))
         newItem.setFlags(
             QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
         items.append(newItem)
@@ -1167,7 +1169,7 @@ class MyForm(settingsmixin.SMainWindow):
         time_item = myTableWidgetItem(l10n.formatTimestamp(received))
         time_item.setToolTip(l10n.formatTimestamp(received))
         time_item.setData(QtCore.Qt.UserRole, msgid)
-        time_item.setData(33, int(received))
+        time_item.setData(TimestampRole, int(received))
         time_item.setFlags(
             QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
         if not read:
@@ -4277,16 +4279,25 @@ class MyForm(settingsmixin.SMainWindow):
 # correctly (rather than alphabetically), we need to overload the <
 # operator and use this class instead of QTableWidgetItem.
 class myTableWidgetItem(QtWidgets.QTableWidgetItem):
+    """
+    A subclass of QTableWidgetItem for received field.
+    '<' operator is overloaded to sort by TimestampRole == 33
+    msgid is stored in instance variable _data
+    """
+    _data = None
 
     def __lt__(self, other):
-        return self.data(33) < other.data(33)
+        return self.data(TimestampRole) < other.data(TimestampRole)
 
     def setData(self, role, value):
+        """Stores data for QtCore.Qt.UserRole in _data"""
         if role == QtCore.Qt.UserRole:
             self._data = value
-        return super(myTableWidgetItem, self).setData(role, value)
+        else:
+            super(myTableWidgetItem, self).setData(role, value)
 
     def data(self, role):
+        """Returns raw msgid string for QtCore.Qt.UserRole stored in _data"""
         if role == QtCore.Qt.UserRole:
             return self._data
         return super(myTableWidgetItem, self).data(role)
