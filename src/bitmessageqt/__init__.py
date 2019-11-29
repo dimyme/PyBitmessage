@@ -1953,7 +1953,7 @@ class MyForm(settingsmixin.SMainWindow):
         self.ui.lineEditTo.setText("")
         self.ui.textEditMessage.reset()
         self.ui.comboBoxSendFrom.setCurrentIndex(0)
-
+    '''
     def click_pushButtonAttach(self):
         """Launch a file picker and append to the current message the base64-encoded contents of the chosen file."""
         filename = QtGui.QFileDialog.getOpenFileName(self, "Attach File")
@@ -1970,7 +1970,36 @@ class MyForm(settingsmixin.SMainWindow):
             else:
                 # send broadcast message
                 self.ui.textEditMessageBroadcast.insertPlainText(html_data)
+    '''
+    
+    
+    def click_pushButtonAttach(self):
+        """Launch a file picker and append to the current message the base64-encoded contents of the chosen file."""
+        filename = QtGui.QFileDialog.getOpenFileName(self, "Attach PICTURE File (mod src for binary) ")
 
+        if filename:
+            f = open(filename, 'rb')
+            data = f.read()
+            f.close()
+
+            data_b64 = base64.b64encode(data)
+
+            html_data =  '<a href="data:application/octet-stream;base64,' + data_b64 + '">'  + os.path.basename(unicode(filename)) + '</a>'
+            pics_data = '<img src="data:image/%s;base64,%s" />'           %            ("jpg", base64.b64encode(data).replace('\n', '')   )
+
+            if self.ui.tabWidgetSend.currentIndex() == self.ui.tabWidgetSend.indexOf(self.ui.sendDirect):
+                # send direct message
+                #self.ui.textEditMessage.insertPlainText(         html_data)
+                self.ui.textEditMessage.insertPlainText(          pics_data)  #  choose either
+            else:
+                # send broadcast message
+                self.ui.textEditMessageBroadcast.insertPlainText(html_data)
+
+
+    
+    
+    
+    
     def click_pushButtonSend(self):
         encoding = 3 if QtGui.QApplication.queryKeyboardModifiers() & QtCore.Qt.ShiftModifier else 2
 
